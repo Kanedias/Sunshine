@@ -1,9 +1,11 @@
 package com.example.android.sunshine.app;
+
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+
 /**
  * A {@link PreferenceActivity} that presents a set of application settings.
  * <p>
@@ -14,14 +16,16 @@ import android.preference.PreferenceManager;
  */
 public class SettingsActivity extends PreferenceActivity
         implements Preference.OnPreferenceChangeListener {
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 // Add 'general' preferences, defined in the XML file
-// TODO: Add preferences from XML
-// For all preferences, attach an OnPreferenceChangeListener so the UI summary can be
+        addPreferencesFromResource(R.xml.pref_general);
+
 // updated when the preference changes.
-// TODO: Add preferences
+        bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_location_key)));
+        bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_units_key)));
     }
     /**
      * Attaches a listener so the summary is always updated with the preference value.

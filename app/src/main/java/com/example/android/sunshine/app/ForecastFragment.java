@@ -1,9 +1,11 @@
 package com.example.android.sunshine.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,9 +30,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by Xavi on 27/08/2014.
@@ -60,11 +60,24 @@ public class ForecastFragment extends Fragment {
 // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-            weatherTask.execute("08530");
+            updateWeather();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateWeather() {
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = prefs.getString(getString(R.string.pref_location_key),
+                getString(R.string.pref_location_default));
+        weatherTask.execute(location);
+    }
+
+    @Override
+    public void onStart() {
+        updateWeather();
+        super.onStart();
     }
 
     @Override
@@ -72,27 +85,15 @@ public class ForecastFragment extends Fragment {
                              Bundle savedInstanceState) {
 
 
-        final String[] forecastArray = {
-                "Avui - Solejat - 19/34",
-                "Demà - Solejat - 19/35",
-                "Divendres - Solejat - 18/34",
-                "Dissabte - Solejat - 19/31",
-                "Diumenge - Ennuvolat - 17/31",
-                "Dilluns - Ennuvolat - 17/31",
-                "Dimarts - Ennuvolat - 18/32",
-
-        };
-
-                final List<String> weekForecast = new ArrayList<String>(Arrays.asList(forecastArray));
-
         mForecastAdapter = new ArrayAdapter<String>(
                 getActivity(), R.layout.list_item_forecast,
                 R.id.list_item_forecast_textview,
-                weekForecast);
+                new ArrayList<String>());
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         ListView forecastListview = (ListView) rootView.findViewById(R.id.listview_forecast);
         forecastListview.setAdapter(mForecastAdapter);
+
         forecastListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -123,6 +124,18 @@ public class ForecastFragment extends Fragment {
          */
         private String formatHighLows(double high, double low) {
 // For presentation, assume the user doesn't care about tenths of a degree.
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String unitType = sharedPrefs.getString(
+                    getString(R.string.pref_units_key),
+                            getString(R.string.pref_units_metric));
+
+            if(unitType.equals((getString(R.string.pref_units_imperial)))) {
+                high = (high * 1.8)+32;
+                low = (low * 1.8)+32;
+            }else if(!unitType.equals(getString(R.string.pref_units_metric))){
+                Log.d(LOG_TAG,"Unit type not found!" + unitType);
+            }
+
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
 
